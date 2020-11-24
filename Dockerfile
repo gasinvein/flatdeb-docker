@@ -2,13 +2,16 @@ FROM godebos/debos as builder
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    git
+    git \
+    mypy \
+    pycodestyle \
+    pyflakes3 \
+    shellcheck \
+    make
 
-ADD patches/ /patches/
-
-RUN git clone -b master https://gitlab.steamos.cloud/steamrt/flatdeb-steam.git /flatdeb-steam && \
-    cd /flatdeb-steam && \
-    git apply /patches/*.patch
+RUN git clone -b master https://salsa.debian.org/smcv/flatdeb.git /opt/flatdeb && \
+    cd /opt/flatdeb && \
+    make check
 
 FROM godebos/debos
 
@@ -29,7 +32,7 @@ RUN apt-get update && \
         time \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /flatdeb-steam/flatdeb /opt/flatdeb
+COPY --from=builder /opt/flatdeb /opt/flatdeb
 
 RUN cd /opt/flatdeb && rm -r ci t apps runtimes suites
 
